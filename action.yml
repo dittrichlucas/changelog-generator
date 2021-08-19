@@ -1,0 +1,15 @@
+name: changelog-generator
+description: 'Changelog generator'
+inputs:
+  token:
+    description: 'Token for operations'
+    required: true
+  owner:
+    description: 'Repository owner'
+    required: true
+  repo:
+    description: 'Repository name'
+    required: true
+runs:
+  using: docker
+  image: Dockerfile
