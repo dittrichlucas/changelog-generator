@@ -16,9 +16,10 @@
     - [x] Issues
     - [x] PRs
 - [ ] Validações
-    - [ ] Caso o arquivo não exista
-    - [ ] Se não filtrar os dados corretamente, o changelog não deve ser gerado
+    - [x] Caso o arquivo não exista, deve cria-lo
+    - [x] Se não houver dados na release atual, o changelog não deve ser gerado
     - [ ] Se não houver responsável pela PR, adicionar o criador no template do changelog
+    - [ ] Se for a primeira release, dispensar necessidade da release anterior
 - [x] Acrescentar CHANGELOG da nova release no início do arquivo existente
 - [x] Transformar o script final em um action
 
