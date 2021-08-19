@@ -36,19 +36,24 @@ type pullsData struct {
 }
 
 const (
+	fileName     = "CHANGELOG.md"
 	closedIssues = "\n\n**Closed issues:**\n"
 	mergedPR     = "\n\n**Merged pull requests:**\n"
 )
 
 var (
-	title         = "\n## [%s](%s) (%s)"
-	fullChangelog = "\n\n[Full Changelog](https://github.com/%v/%v/compare/%v...%v)"
-	issueTemplate = "\n- %s [#%v](%s)"
-	prTemplate    = "\n- %s [#%v](%s) ([%s](%s))"
-	token         = ga.GetInput("token")
-	owner         = ga.GetInput("owner")
-	repo          = ga.GetInput("repo")
-	ctx           = context.Background()
+	changelogTitle = "# Changelog\n"
+	title          = "\n## [%s](%s) (%s)"
+	fullChangelog  = "\n\n[Full Changelog](https://github.com/%v/%v/compare/%v...%v)"
+	issueTemplate  = "\n- %s [#%v](%s)"
+	prTemplate     = "\n- %s [#%v](%s) ([%s](%s))"
+	token          = "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" // ga.GetInput("token")
+	owner          = "dittrichlucas"                            // ga.GetInput("owner")
+	repo           = "changelog-generator"                      // ga.GetInput("repo")
+	// token = "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" // ga.GetInput("token")
+	// owner = "lucasdittrichzup"                         // ga.GetInput("owner")
+	// repo  = "changelog-action-test"                    // ga.GetInput("repo")
+	ctx = context.Background()
 )
 
 func main() {
@@ -68,19 +73,29 @@ func main() {
 
 	generateChangelog(previousRelease, nextRelease, closedIssues, mergedPulls)
 
-	fmt.Println("Finish!")
+	fmt.Println("Process completed successfully!")
 }
 
 func generateChangelog(previousRelease, nextRelease tagData, issues []issuesData, prs []pullsData) {
-	// Leitura do arquivo
-	file := filepath.Join("CHANGELOG.md")
-	fileRead, _ := ioutil.ReadFile(file)
+	file := filepath.Join(fileName)
+	// Cria o arquivo apenas se houver issue ou pr na release gerada
+	if !fileExists(file) || (len(issues) > 0 || len(prs) > 0) {
+		err := ioutil.WriteFile(file, []byte(changelogTitle), os.ModePerm)
+		if err != nil {
+			log.Fatalf("Unable to write file: %v", err)
+		}
+	}
+
+	fileRead, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
 	lines := strings.Split(string(fileRead), "\n")
 
 	// Lógica: https: //stackoverflow.com/questions/46128016/insert-a-value-in-a-slice-at-a-given-index
 	lines = append(lines[:1+1], lines[1:]...)
 	formatTitle := fmt.Sprintf(title, nextRelease.tagName, nextRelease.link, nextRelease.publishedAt.Format("2006-01-04"))
-	formatFullChangelog := fmt.Sprintf(fullChangelog, owner, repo, previousRelease.tagName, nextRelease.tagName) // TODO: Ajustar para o caso da zup (ou quando o owner ou organização for diferente...)
+	formatFullChangelog := fmt.Sprintf(fullChangelog, owner, repo, previousRelease.tagName, nextRelease.tagName)
 	lines[1] = formatTitle + formatFullChangelog
 
 	// Valida e formata a parte das issues
@@ -101,37 +116,43 @@ func generateChangelog(previousRelease, nextRelease tagData, issues []issuesData
 		}
 	}
 
-	// Escreve no arquivo o changelog gerado
-	newFile := strings.Join(lines, "\n")
-	ioutil.WriteFile(file, []byte(newFile), os.ModePerm)
+	if len(issues) > 0 || len(prs) > 0 {
+		// Escreve no arquivo o changelog gerado
+		newFile := strings.Join(lines, "\n")
+		ioutil.WriteFile(file, []byte(newFile), os.ModePerm)
+	}
 }
 
 func filterIssues(client *github.Client, pr, nr tagData) []issuesData {
-	// Seleciona todas as issues fechadas depois da data de criação da tag
-	issues, _, err := client.Issues.ListByRepo(
-		context.Background(),
-		owner,
-		repo,
-		&github.IssueListByRepoOptions{State: "closed", Since: pr.publishedAt.Time},
-	)
-	if err != nil {
-		log.Fatalf("error listing issues: %v", err)
-	}
-
-	// Coloca todos os títulos das issues elegíveis dentro do slice para uso posterior
-	var filteredIssues []issuesData
-	for _, issue := range issues {
-		if issue.ClosedAt.After(pr.publishedAt.Time) && issue.PullRequestLinks == nil && issue.ClosedAt.Before(nr.publishedAt.Time) {
-			filterIssue := issuesData{
-				title:       *issue.Title,
-				issueNumber: *issue.Number,
-				link:        *issue.HTMLURL,
-			}
-			filteredIssues = append(filteredIssues, filterIssue)
+	if pr.tagName != "" {
+		// Seleciona todas as issues fechadas depois da data de criação da tag
+		issues, _, err := client.Issues.ListByRepo(
+			context.Background(),
+			owner,
+			repo,
+			&github.IssueListByRepoOptions{State: "closed", Since: pr.publishedAt.Time},
+		)
+		if err != nil {
+			log.Fatalf("error listing issues: %v", err)
 		}
+
+		// Coloca todos os títulos das issues elegíveis dentro do slice para uso posterior
+		var filteredIssues []issuesData
+		for _, issue := range issues {
+			if issue.ClosedAt.After(pr.publishedAt.Time) && issue.PullRequestLinks == nil && issue.ClosedAt.Before(nr.publishedAt.Time) {
+				filterIssue := issuesData{
+					title:       *issue.Title,
+					issueNumber: *issue.Number,
+					link:        *issue.HTMLURL,
+				}
+				filteredIssues = append(filteredIssues, filterIssue)
+			}
+		}
+
+		return filteredIssues
 	}
 
-	return filteredIssues
+	return []issuesData{}
 }
 
 func filterPulls(client *github.Client, psr, nr tagData) []pullsData {
@@ -149,16 +170,18 @@ func filterPulls(client *github.Client, psr, nr tagData) []pullsData {
 	// Filtra as prs mergeadas após a data de criação da tag
 	// TODO: abrir issue no repo go-github, pois retorna erro ao usar o campo name da struct de user
 	var mergedPulls []pullsData
-	for _, pr := range prs {
-		if pr.MergedAt.After(psr.publishedAt.Time) && pr.MergedAt.Before(nr.publishedAt.Time) {
-			filterPull := pullsData{
-				title:        *pr.Title,
-				prNumber:     *pr.Number,
-				link:         *pr.HTMLURL,
-				assigneeUser: *pr.User.Login,
-				assigneeLink: *pr.User.HTMLURL,
+	if psr.link != "" {
+		for _, pr := range prs {
+			if pr.MergedAt.After(psr.publishedAt.Time) && pr.MergedAt.Before(nr.publishedAt.Time) {
+				filterPull := pullsData{
+					title:        *pr.Title,
+					prNumber:     *pr.Number,
+					link:         *pr.HTMLURL,
+					assigneeUser: *pr.User.Login,
+					assigneeLink: *pr.User.HTMLURL,
+				}
+				mergedPulls = append(mergedPulls, filterPull)
 			}
-			mergedPulls = append(mergedPulls, filterPull)
 		}
 	}
 
@@ -197,6 +220,10 @@ func getPreviousRelease(client *github.Client) tagData {
 		log.Fatalf("error getting the previous tag: %v", err)
 	}
 
+	if len(tags) <= 1 {
+		return tagData{}
+	}
+
 	previousRelease := tags[1]
 
 	prData := tagData{
@@ -222,6 +249,14 @@ func getConfig(key string) string {
 	}
 
 	return value
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
 
 func setupClient() *github.Client {
