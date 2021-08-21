@@ -207,17 +207,10 @@ func filterIssues(d filterData) []issuesData {
 }
 
 func filterPulls(d filterData) []pullsData {
-	// Seleciona todas as pr fechadas
-	prs, _, err := d.client.PullRequests.List(
-		ctx,
-		d.owner,
-		d.repoName,
-		&github.PullRequestListOptions{State: "closed"},
-	)
-	if err != nil {
-		log.Fatalf("error listing prs: %v", err)
+	prs := fetchMergedPulls(d)
+	if len(prs) == 0 {
+		return []pullsData{}
 	}
-
 	// Filtra as prs mergeadas após a data de criação da tag
 	// TODO: abrir issue no repo go-github, pois retorna erro ao usar o campo name da struct de user
 	var mergedPulls []pullsData
@@ -236,6 +229,27 @@ func filterPulls(d filterData) []pullsData {
 		}
 	}
 
+	return mergedPulls
+}
+
+func fetchMergedPulls(d filterData) []*github.PullRequest {
+	// Seleciona todas as pr fechadas
+	prs, _, err := d.client.PullRequests.List(
+		ctx,
+		d.owner,
+		d.repoName,
+		&github.PullRequestListOptions{State: "closed"},
+	)
+	if err != nil {
+		log.Fatalf("error listing prs: %v", err)
+	}
+
+	var mergedPulls []*github.PullRequest
+	for _, pr := range prs {
+		if pr.MergedAt != nil {
+			mergedPulls = append(mergedPulls, pr)
+		}
+	}
 	return mergedPulls
 }
 

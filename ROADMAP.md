@@ -30,6 +30,7 @@
 - [ ] Gerar changelog retroativo
 - [ ] Refatorações
     - [ ] Retornar erros corretamente
+    - [ ] Renomear funções e variáveis corretamente
 - [x] Escolher nome da action
 - [ ] Adicionar testes unitários e integrados
 - [ ] Adicionar fluxo de CI/CD
