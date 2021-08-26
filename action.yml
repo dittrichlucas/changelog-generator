@@ -1,11 +1,14 @@
-name: Changelog generator
-description: ':octocat: Github action to generate changelog automatically :memo:'
+name: Auto changelog generator
+description: ':octocat: A simple Github Action to generate changelog automatically :memo:'
+branding:
+  icon: 'file-text'
+  color: 'green'
 inputs:
   token:
     description: 'Token for operations (e.g.: GITHUB_TOKEN)'
     required: true
   repo:
-    description: 'Repository name (e.g.: GITHUB_REPO or <owner>/<repo_name>)'
+    description: 'Repository name with owner (e.g.: GITHUB_REPOSITORY or <owner>/<repo_name>)'
     required: true
 runs:
   using: docker
