@@ -1,4 +1,4 @@
-name: Changelog generator
+name: Auto changelog generator
 description: ':octocat: A simple Github Action to generate changelog automatically :memo:'
 branding:
   icon: 'file-text'
