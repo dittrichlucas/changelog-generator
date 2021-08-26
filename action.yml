@@ -1,5 +1,8 @@
 name: Changelog generator
-description: ':octocat: Github action to generate changelog automatically :memo:'
+description: ':octocat: A simple Github Action to generate changelog automatically :memo:'
+branding:
+  icon: 'file-text'
+  color: 'green'
 inputs:
   token:
     description: 'Token for operations (e.g.: GITHUB_TOKEN)'
