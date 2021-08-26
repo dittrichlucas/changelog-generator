@@ -8,7 +8,7 @@ inputs:
     description: 'Token for operations (e.g.: GITHUB_TOKEN)'
     required: true
   repo:
-    description: 'Repository name (e.g.: GITHUB_REPO or <owner>/<repo_name>)'
+    description: 'Repository name with owner (e.g.: GITHUB_REPOSITORY or <owner>/<repo_name>)'
     required: true
 runs:
   using: docker
