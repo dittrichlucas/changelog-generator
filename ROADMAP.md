@@ -28,12 +28,20 @@
 - [ ] Traduzir arquivos para inglês
 - [ ] Gerar log do processamento dos passos
 - [ ] Gerar changelog retroativo
+    - [ ] Todas as tags
+    - [ ] De/até tag
 - [ ] Refatorações
     - [ ] Retornar erros corretamente
     - [ ] Renomear funções e variáveis corretamente
+- [ ] Novas features
+    - [ ] Personalizar changelog (P&D)
+    - [ ] Adicionar o changelog gerado na descrição da release
 - [x] Escolher nome da action
 - [ ] Adicionar testes unitários e integrados
 - [ ] Adicionar fluxo de CI/CD
+    - [ ] Lint
+    - [ ] Build
+    - [ ] Testes
 
 ### Business rule
 
